@@ -25,14 +25,16 @@ RUN set -x; \
 
 # Install Odoo
 ENV ODOO_VERSION 11.0
-ENV ODOO_RELEASE 20171030
+# ENV ODOO_RELEASE 20171030
+ENV ODOO_RELEASE latest
 RUN set -x; \
         curl -o odoo.deb -SL http://nightly.odoo.com/${ODOO_VERSION}/nightly/deb/odoo_${ODOO_VERSION}.${ODOO_RELEASE}_all.deb \
-        && echo '63d3fd997c850b657b93fb9351624d88d45d1682 odoo.deb' | sha1sum -c - \
         && dpkg --force-depends -i odoo.deb \
         && apt-get update \
         && apt-get -y install -f --no-install-recommends \
         && rm -rf /var/lib/apt/lists/* odoo.deb
+# skipping this sha1sum as the line under the curl above.  we are using latest right now.  not sure how to easily get the sum
+#        && echo '63d3fd997c850b657b93fb9351624d88d45d1682 odoo.deb' | sha1sum -c - \
 
 # Copy entrypoint script and Odoo configuration file
 RUN pip3 install num2words
@@ -44,6 +46,11 @@ RUN chown odoo /etc/odoo/odoo.conf
 RUN mkdir -p /mnt/extra-addons \
         && chown -R odoo /mnt/extra-addons
 VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+
+RUN mkdir -p /mnt/extra-addons/addons
+RUN mkdir -p /mnt/extra-addons/data
+# RUN chown -R odoo /bitnami/odoo
+COPY onlyjane/ /mnt/extra-addons/addons/
 
 # Expose Odoo services
 EXPOSE 8069 8071
